@@ -14,33 +14,29 @@
 
 from typing import Any
 
-from . import _automatic_function_calling_util
-from .langchain_tool import LangchainTool
+from toolbox_core import ToolboxClient
+from toolbox_core.tool import ToolboxTool as MCPToolboxTool
 
 
 class ToolboxTool:
-  """A class that provides access to toolbox tools.
+    """A class that provides access to toolbox tools.
 
-  Example:
-  ```python
-  toolbox = ToolboxTool("http://127.0.0.1:5000")
-  tool = toolbox.get_tool("tool_name")
-  toolset = toolbox.get_toolset("toolset_name")
-  ```
-  """
+    Example:
+    ```python
+    toolbox = ToolboxTool("http://127.0.0.1:5000")
+    tool = await toolbox.get_tool("tool_name")
+    toolset = await toolbox.get_toolset("toolset_name")
+    ```
+    """
 
-  toolbox_client: Any
-  """The toolbox client."""
+    toolbox_client: Any
+    """The toolbox client."""
 
-  def __init__(self, url: str):
-    from toolbox_langchain import ToolboxClient
+    def __init__(self, url: str):
+        self.toolbox_client = ToolboxClient(url)
 
-    self.toolbox_client = ToolboxClient(url)
+    async def get_tool(self, tool_name: str) -> MCPToolboxTool:
+        return await self.toolbox_client.load_tool(tool_name)
 
-  def get_tool(self, tool_name: str) -> LangchainTool:
-    tool = self.toolbox_client.load_tool(tool_name)
-    return LangchainTool(tool)
-
-  def get_toolset(self, toolset_name: str) -> list[LangchainTool]:
-    tools = self.toolbox_client.load_toolset(toolset_name)
-    return [LangchainTool(tool) for tool in tools]
+    async def get_toolset(self, toolset_name: str) -> list[MCPToolboxTool]:
+        return await self.toolbox_client.load_toolset(toolset_name)
