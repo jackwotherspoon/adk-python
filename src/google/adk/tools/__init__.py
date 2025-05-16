@@ -30,7 +30,7 @@ from .preload_memory_tool import preload_memory_tool as preload_memory
 from .tool_context import ToolContext
 from .transfer_to_agent_tool import transfer_to_agent
 
-from toolbox_core import ToolboxSyncClient as Toolbox
+from toolbox_core import ToolboxSyncClient
 
 __all__ = [
     'APIHubToolset',
@@ -47,7 +47,7 @@ __all__ = [
     'load_memory',
     'LongRunningFunctionTool',
     'preload_memory',
-    'Toolbox',
     'ToolContext',
+    'ToolboxSyncClient',
     'transfer_to_agent',
 ]
