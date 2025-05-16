@@ -30,22 +30,24 @@ from .preload_memory_tool import preload_memory_tool as preload_memory
 from .tool_context import ToolContext
 from .transfer_to_agent_tool import transfer_to_agent
 
+from toolbox_core import ToolboxClient as Toolbox
 
 __all__ = [
-    'APIHubToolset',
-    'AuthToolArguments',
-    'BaseTool',
-    'built_in_code_execution',
-    'google_search',
-    'VertexAiSearchTool',
-    'ExampleTool',
-    'exit_loop',
-    'FunctionTool',
-    'get_user_choice',
-    'load_artifacts',
-    'load_memory',
-    'LongRunningFunctionTool',
-    'preload_memory',
-    'ToolContext',
-    'transfer_to_agent',
+    "APIHubToolset",
+    "AuthToolArguments",
+    "BaseTool",
+    "built_in_code_execution",
+    "google_search",
+    "VertexAiSearchTool",
+    "ExampleTool",
+    "exit_loop",
+    "FunctionTool",
+    "get_user_choice",
+    "load_artifacts",
+    "load_memory",
+    "LongRunningFunctionTool",
+    "preload_memory",
+    "Toolbox",
+    "ToolContext",
+    "transfer_to_agent",
 ]
