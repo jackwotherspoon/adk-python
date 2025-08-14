@@ -216,7 +216,7 @@ def test_cli_deploy_cloud_run_passthrough_args(
           "--region", 
           "us-central1",
           str(agent_dir),
-          "--labels=dev-tutorial=codelab-mcp",
+          "--labels=test-label=test",
           "--memory=1Gi",
           "--cpu=1",
       ],
@@ -234,7 +234,7 @@ def test_cli_deploy_cloud_run_passthrough_args(
   called_kwargs = rec.calls[0][1]
   extra_args = called_kwargs.get("extra_gcloud_args")
   assert extra_args is not None
-  assert "--labels=dev-tutorial=codelab-mcp" in extra_args
+  assert "--labels=test-label=test" in extra_args
   assert "--memory=1Gi" in extra_args
   assert "--cpu=1" in extra_args
 
