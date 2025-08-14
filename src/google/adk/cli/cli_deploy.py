@@ -129,6 +129,7 @@ def to_cloud_run(
     artifact_service_uri: Optional[str] = None,
     memory_service_uri: Optional[str] = None,
     a2a: bool = False,
+    extra_gcloud_args: Optional[tuple[str, ...]] = None,
 ):
   """Deploys an agent to Google Cloud Run.
 
@@ -222,26 +223,48 @@ def to_cloud_run(
     click.echo('Deploying to Cloud Run...')
     region_options = ['--region', region] if region else []
     project = _resolve_project(project)
-    subprocess.run(
-        [
-            'gcloud',
-            'run',
-            'deploy',
-            service_name,
-            '--source',
-            temp_folder,
-            '--project',
-            project,
-            *region_options,
-            '--port',
-            str(port),
-            '--verbosity',
-            log_level.lower() if log_level else verbosity,
-            '--labels',
-            'created-by=adk',
-        ],
-        check=True,
-    )
+    
+    # Build the command with extra gcloud args
+    gcloud_cmd = [
+        'gcloud',
+        'run',
+        'deploy',
+        service_name,
+        '--source',
+        temp_folder,
+        '--project',
+        project,
+        *region_options,
+        '--port',
+        str(port),
+        '--verbosity',
+        log_level.lower() if log_level else verbosity,
+    ]
+    
+    # Handle labels specially - merge user labels with ADK label
+    user_labels = []
+    extra_args_without_labels = []
+    
+    if extra_gcloud_args:
+        for arg in extra_gcloud_args:
+            if arg.startswith('--labels='):
+                # Extract user-provided labels
+                user_labels_value = arg[9:]  # Remove '--labels=' prefix
+                user_labels.append(user_labels_value)
+            else:
+                extra_args_without_labels.append(arg)
+    
+    # Combine ADK label with user labels
+    all_labels = ['created-by=adk']
+    all_labels.extend(user_labels)
+    labels_arg = ','.join(all_labels)
+    
+    gcloud_cmd.extend(['--labels', labels_arg])
+    
+    # Add any remaining extra passthrough args
+    gcloud_cmd.extend(extra_args_without_labels)
+    
+    subprocess.run(gcloud_cmd, check=True)
   finally:
     click.echo(f'Cleaning up the temp folder: {temp_folder}')
     shutil.rmtree(temp_folder)

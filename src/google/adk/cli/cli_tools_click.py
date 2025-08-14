@@ -858,7 +858,7 @@ def cli_api_server(
   server.run()
 
 
-@deploy.command("cloud_run")
+@deploy.command("cloud_run", context_settings={"allow_extra_args": True, "allow_interspersed_args": False})
 @click.option(
     "--project",
     type=str,
@@ -971,7 +971,9 @@ def cli_api_server(
 # TODO: Add eval_storage_uri option back when evals are supported in Cloud Run.
 @adk_services_options()
 @deprecated_adk_services_options()
+@click.pass_context
 def cli_deploy_cloud_run(
+    ctx,
     agent: str,
     project: Optional[str],
     region: Optional[str],
@@ -1029,6 +1031,7 @@ def cli_deploy_cloud_run(
         artifact_service_uri=artifact_service_uri,
         memory_service_uri=memory_service_uri,
         a2a=a2a,
+        extra_gcloud_args=ctx.args,
     )
   except Exception as e:
     click.secho(f"Deploy failed: {e}", fg="red", err=True)

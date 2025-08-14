@@ -196,6 +196,49 @@ def test_cli_deploy_cloud_run_failure(
   assert "Deploy failed: boom" in result.output
 
 
+def test_cli_deploy_cloud_run_passthrough_args(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+  """Extra args should be passed through to the gcloud command."""
+  rec = _Recorder()
+  monkeypatch.setattr(cli_tools_click.cli_deploy, "to_cloud_run", rec)
+
+  agent_dir = tmp_path / "agent_passthrough"
+  agent_dir.mkdir()
+  runner = CliRunner()
+  result = runner.invoke(
+      cli_tools_click.main,
+      [
+          "deploy",
+          "cloud_run",
+          "--project",
+          "test-project",
+          "--region", 
+          "us-central1",
+          str(agent_dir),
+          "--labels=dev-tutorial=codelab-mcp",
+          "--memory=1Gi",
+          "--cpu=1",
+      ],
+  )
+  # Print debug information if the test fails
+  if result.exit_code != 0:
+    print(f"Exit code: {result.exit_code}")
+    print(f"Output: {result.output}")
+    print(f"Exception: {result.exception}")
+    
+  assert result.exit_code == 0
+  assert rec.calls, "cli_deploy.to_cloud_run must be invoked"
+  
+  # Check that extra_gcloud_args were passed correctly
+  called_kwargs = rec.calls[0][1]
+  extra_args = called_kwargs.get("extra_gcloud_args")
+  assert extra_args is not None
+  assert "--labels=dev-tutorial=codelab-mcp" in extra_args
+  assert "--memory=1Gi" in extra_args
+  assert "--cpu=1" in extra_args
+
+
 # cli deploy agent_engine
 def test_cli_deploy_agent_engine_success(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
