@@ -213,7 +213,7 @@ def test_cli_deploy_cloud_run_passthrough_args(
           "cloud_run",
           "--project",
           "test-project",
-          "--region", 
+          "--region",
           "us-central1",
           str(agent_dir),
           "--labels=test-label=test",
@@ -226,10 +226,10 @@ def test_cli_deploy_cloud_run_passthrough_args(
     print(f"Exit code: {result.exit_code}")
     print(f"Output: {result.output}")
     print(f"Exception: {result.exception}")
-    
+
   assert result.exit_code == 0
   assert rec.calls, "cli_deploy.to_cloud_run must be invoked"
-  
+
   # Check that extra_gcloud_args were passed correctly
   called_kwargs = rec.calls[0][1]
   extra_args = called_kwargs.get("extra_gcloud_args")

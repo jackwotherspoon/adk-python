@@ -858,7 +858,13 @@ def cli_api_server(
   server.run()
 
 
-@deploy.command("cloud_run", context_settings={"allow_extra_args": True, "allow_interspersed_args": False})
+@deploy.command(
+    "cloud_run",
+    context_settings={
+        "allow_extra_args": True,
+        "allow_interspersed_args": False,
+    },
+)
 @click.option(
     "--project",
     type=str,
