@@ -297,7 +297,9 @@ def test_cli_deploy_cloud_run_rejects_args_before_separator(
   )
 
   assert result.exit_code == 2
-  assert "Unexpected arguments before '--':" in result.output
+  assert (
+      "Unexpected arguments after agent path and before '--':" in result.output
+  )
   assert "unexpected_arg" in result.output
   assert not rec.calls, "cli_deploy.to_cloud_run should not be called"
 
