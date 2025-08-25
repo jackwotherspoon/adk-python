@@ -199,7 +199,7 @@ def test_cli_deploy_cloud_run_failure(
 def test_cli_deploy_cloud_run_passthrough_args(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-  """Extra args should be passed through to the gcloud command."""
+  """Extra args after '--' should be passed through to the gcloud command."""
   rec = _Recorder()
   monkeypatch.setattr(cli_tools_click.cli_deploy, "to_cloud_run", rec)
 
@@ -216,6 +216,7 @@ def test_cli_deploy_cloud_run_passthrough_args(
           "--region",
           "us-central1",
           str(agent_dir),
+          "--",
           "--labels=test-label=test",
           "--memory=1Gi",
           "--cpu=1",
@@ -237,6 +238,102 @@ def test_cli_deploy_cloud_run_passthrough_args(
   assert "--labels=test-label=test" in extra_args
   assert "--memory=1Gi" in extra_args
   assert "--cpu=1" in extra_args
+
+
+def test_cli_deploy_cloud_run_rejects_args_without_separator(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+  """Args without '--' separator should be rejected with helpful error message."""
+  rec = _Recorder()
+  monkeypatch.setattr(cli_tools_click.cli_deploy, "to_cloud_run", rec)
+
+  agent_dir = tmp_path / "agent_no_sep"
+  agent_dir.mkdir()
+  runner = CliRunner()
+  result = runner.invoke(
+      cli_tools_click.main,
+      [
+          "deploy",
+          "cloud_run",
+          "--project",
+          "test-project",
+          "--region",
+          "us-central1",
+          str(agent_dir),
+          "--labels=test-label=test",  # This should be rejected
+      ],
+  )
+
+  assert result.exit_code == 2
+  assert "Unexpected arguments:" in result.output
+  assert "Use '--' to separate gcloud arguments" in result.output
+  assert not rec.calls, "cli_deploy.to_cloud_run should not be called"
+
+
+def test_cli_deploy_cloud_run_rejects_args_before_separator(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+  """Args before '--' separator should be rejected."""
+  rec = _Recorder()
+  monkeypatch.setattr(cli_tools_click.cli_deploy, "to_cloud_run", rec)
+
+  agent_dir = tmp_path / "agent_before_sep"
+  agent_dir.mkdir()
+  runner = CliRunner()
+  result = runner.invoke(
+      cli_tools_click.main,
+      [
+          "deploy",
+          "cloud_run",
+          "--project",
+          "test-project",
+          "--region",
+          "us-central1",
+          str(agent_dir),
+          "unexpected_arg",  # This should be rejected
+          "--",
+          "--labels=test-label=test",
+      ],
+  )
+
+  assert result.exit_code == 2
+  assert "Unexpected arguments before '--':" in result.output
+  assert "unexpected_arg" in result.output
+  assert not rec.calls, "cli_deploy.to_cloud_run should not be called"
+
+
+def test_cli_deploy_cloud_run_allows_empty_gcloud_args(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+  """No gcloud args after '--' should be allowed."""
+  rec = _Recorder()
+  monkeypatch.setattr(cli_tools_click.cli_deploy, "to_cloud_run", rec)
+
+  agent_dir = tmp_path / "agent_empty_gcloud"
+  agent_dir.mkdir()
+  runner = CliRunner()
+  result = runner.invoke(
+      cli_tools_click.main,
+      [
+          "deploy",
+          "cloud_run",
+          "--project",
+          "test-project",
+          "--region",
+          "us-central1",
+          str(agent_dir),
+          "--",
+          # No gcloud args after --
+      ],
+  )
+
+  assert result.exit_code == 0
+  assert rec.calls, "cli_deploy.to_cloud_run must be invoked"
+
+  # Check that extra_gcloud_args is empty
+  called_kwargs = rec.calls[0][1]
+  extra_args = called_kwargs.get("extra_gcloud_args")
+  assert extra_args == ()
 
 
 # cli deploy agent_engine
@@ -557,6 +654,7 @@ def test_cli_deploy_cloud_run_gcloud_arg_conflict(
           "--region",
           "us-central1",
           str(agent_dir),
+          "--",
           "--project=conflict-project",  # This should conflict
       ],
   )
@@ -577,6 +675,7 @@ def test_cli_deploy_cloud_run_gcloud_arg_conflict(
           "--project",
           "test-project",
           str(agent_dir),
+          "--",
           "--port=9000",  # This should conflict
       ],
   )
@@ -599,6 +698,7 @@ def test_cli_deploy_cloud_run_gcloud_arg_conflict(
           "--region",
           "us-central1",
           str(agent_dir),
+          "--",
           "--region=us-west1",  # This should conflict
       ],
   )
